@@ -98,7 +98,7 @@ function shellyBLUParser(res)
     return result;
 }
 
-BLE.Scanner.Start( {duration_ms: BLE.Scanner.INFINITE_SCAN}.
+BLE.Scanner.Start( {duration_ms: BLE.Scanner.INFINITE_SCAN},
     function(event,result,ud)
     {
         if( event === BLE.Scanner.SCAN_RESULT && 
