@@ -115,7 +115,7 @@ BLE.Scanner.Start( {duration_ms: BLE.Scanner.INFINITE_SCAN},
                     last_packet_id = BTHparsed.pid;
                     if( BTHparsed.state !== undefined )
                     {
-                        BTHparsed.state = BTHparsed.state ? "close" : "open";
+                        BTHparsed.state = BTHparsed.state ? "open" : "close";
                     }
                     MQTT.publish( mqttPrefix+"/ble", JSON.stringify( BTHparsed ), 1, false );
                 }
