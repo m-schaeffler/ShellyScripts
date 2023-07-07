@@ -159,7 +159,7 @@ function mqttCallback(topic,message,id)
         longPress( id );
     }
 }
-        
+
 // Main
 showStates();
 MQTT.subscribe( mqttPrefix+"/state:0", mqttCallback, 0 );

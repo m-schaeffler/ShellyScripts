@@ -23,6 +23,7 @@ BTH[0x05] = { n: "lux", t: uint24, f: 0.01 };
 BTH[0x2d] = { n: "state", t: uint8 };
 BTH[0x3a] = { n: "button", t: uint8 };
 BTH[0x3f] = { n: "tilt", t: int16, f: 0.1 };
+let buttonEvent = ["-","S","SS","SSS","L"];
 let BTHomeDecoder = {
   utoi: function (num, bitsz) {
     let mask = 1 << (bitsz - 1);
@@ -113,6 +114,10 @@ BLE.Scanner.Start( {duration_ms: BLE.Scanner.INFINITE_SCAN},
                 if( last_packet_id !== BTHparsed.pid )
                 {
                     last_packet_id = BTHparsed.pid;
+                    if( BTHparsed.button !== undefined )
+                    {
+                        BTHparsed.button = buttonEvent[BTHparsed.button];
+                    }
                     if( BTHparsed.state !== undefined )
                     {
                         BTHparsed.state = BTHparsed.state ? "open" : "close";
@@ -123,3 +128,4 @@ BLE.Scanner.Start( {duration_ms: BLE.Scanner.INFINITE_SCAN},
         }
     } );
 
+print( "started" );

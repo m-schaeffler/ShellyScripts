@@ -2,6 +2,7 @@
 
 cp ../../.node-red/projects/node_red/shellies2/Kellertreppe_Licht_Treppenlicht.js Treppenlicht.js
 cp ../../.node-red/projects/node_red/shellies2/Kellertreppe_Licht_ShellyBlu.js ShellyBlu.js
-cp ../../.node-red/projects/node_red/shellies2/shellypro3em_SumPhases.js SumPhases.js
+cp ../../.node-red/projects/node_red/shellies2/Stromzaehler_SumPhases.js SumPhases.js
 cp ../../.node-red/projects/node_red/shellies2/Verteilung_KeepAlive.js KeepAlive.js
 cp ../../.node-red/projects/node_red/shellies2/Stromzaehler_GetTemp.js Stromzaehler_GetTemp.js
+cp ../../.node-red/projects/node_red/shellies2/shellyplusrgbw-1_dualLed.js dualLed.js

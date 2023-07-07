@@ -73,11 +73,12 @@ Shelly.call( "KVS.Get", { key:"feed" },
     null );
 
 // MQTT
-MQTT.subscribe( mqttPrefix+"/emeter:0/set", 
-    function(topic,message,ud)
+function mqttSet(topic,message,ud)
+{
+    if( message != "" )
     {
         message = JSON.parse( message );
-        print(JSON.stringify(message));
+        print(message);
         if( message.purchase !== undefined )
         {
             purchase = message.purchase;
@@ -88,8 +89,9 @@ MQTT.subscribe( mqttPrefix+"/emeter:0/set",
             feed = message.feed;
             Shelly.call( "KVS.Set", { key:"feed", value:feed } );
         }
-    },
-    null );
+    }
+}
+MQTT.subscribe( mqttPrefix+"/emeter:0/set", mqttSet, 0 );
 
 // Handler
 Shelly.addStatusHandler(
@@ -97,7 +99,7 @@ Shelly.addStatusHandler(
     {
         if( status.name === 'emdata')
         {
-            print(JSON.stringify(status.delta));
+            print("status",JSON.stringify(status.delta));
             calculate( status.delta );
         }
     },
