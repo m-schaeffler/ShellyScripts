@@ -20,6 +20,7 @@ BTH[0x01] = { n: "battery", t: uint8 };
 BTH[0x05] = { n: "lux", t: uint24, f: 0.01 };
 //BTH[0x1a] = { n: "Door", t: uint8 };
 //BTH[0x20] = { n: "Moisture", t: uint8 };
+BTH[0x21] = { n: "motion", t: uint8 };
 BTH[0x2d] = { n: "state", t: uint8 };
 BTH[0x3a] = { n: "button", t: uint8 };
 BTH[0x3f] = { n: "tilt", t: int16, f: 0.1 };
@@ -77,7 +78,7 @@ let BTHomeDecoder = {
     while (buffer.length > 0) {
       _bth = BTH[buffer.at(0)];
       if (typeof _bth === "undefined") {
-        console.log("BTH: unknown type");
+        console.log("BTH: unknown type",buffer.at(0));
         break;
       }
       buffer = buffer.slice(1);
@@ -103,14 +104,14 @@ BLE.Scanner.Start( {duration_ms: BLE.Scanner.INFINITE_SCAN},
     function(event,result,ud)
     {
         if( event === BLE.Scanner.SCAN_RESULT && 
-            result !== null && 
+            result !== null &&
             result.service_data !== undefined &&
             result.service_data[BTHOME_SVC_ID_STR] !== undefined )
         {
             let BTHparsed = shellyBLUParser( result );
             if( BTHparsed !== null )
             {
-                //print( JSON.stringify( BTHparsed ) );
+                print( JSON.stringify( BTHparsed ) );
                 if( last_packet_id !== BTHparsed.pid )
                 {
                     last_packet_id = BTHparsed.pid;
