@@ -1,6 +1,7 @@
 let mqttPrefix = Shelly.getComponentConfig( "mqtt" ).topic_prefix;
 let BTHOME_SVC_ID_STR = "fcd2";
 let last_packet_id;
+let last_addr;
 
 let uint8  = 0;
 let int8   = 1;
@@ -112,9 +113,10 @@ BLE.Scanner.Start( {duration_ms: BLE.Scanner.INFINITE_SCAN},
             if( BTHparsed !== null )
             {
                 print( JSON.stringify( BTHparsed ) );
-                if( last_packet_id !== BTHparsed.pid )
+                if( last_packet_id !== BTHparsed.pid || last_addr !== BTHparsed.addr )
                 {
                     last_packet_id = BTHparsed.pid;
+                    last_addr      = BTHparsed.addr;
                     if( BTHparsed.button !== undefined )
                     {
                         BTHparsed.button = buttonEvent[BTHparsed.button];
