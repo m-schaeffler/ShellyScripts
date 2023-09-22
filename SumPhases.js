@@ -1,5 +1,5 @@
 let mqttPrefix = Shelly.getComponentConfig( "mqtt" ).topic_prefix;
-let last       = {a_total_act:0,a_total_act_ret:0,b_total_act:0,b_total_act_ret:0,c_total_act:0,c_total_act_ret:0};
+let last       = {total_act:0,total_act_ret:0};
 let purchase   = 0;
 let feed       = 0;
 
@@ -10,13 +10,8 @@ function send()
 
 function calculate(emdata)
 {
-    print("calc");
-    let delta = ( emdata.a_total_act_energy - last.a_total_act ) +
-                ( emdata.b_total_act_energy - last.b_total_act ) +
-                ( emdata.c_total_act_energy - last.c_total_act ) -
-                ( emdata.a_total_act_ret_energy - last.a_total_act_ret ) -
-                ( emdata.b_total_act_ret_energy - last.b_total_act_ret ) -
-                ( emdata.c_total_act_ret_energy - last.c_total_act_ret );
+    //print("calc");
+    let delta = ( emdata.total_act - last.total_act ) - ( emdata.total_act_ret - last.total_act_ret );
     print("delta",delta);
     if( delta > 0 )
     {
@@ -31,13 +26,9 @@ function calculate(emdata)
         Shelly.call( "KVS.Set", { key:"feed", value:feed } );
     }
     send();
-    last.a_total_act     = emdata.a_total_act_energy;
-    last.a_total_act_ret = emdata.a_total_act_ret_energy;
-    last.b_total_act     = emdata.b_total_act_energy;
-    last.b_total_act_ret = emdata.b_total_act_ret_energy;
-    last.c_total_act     = emdata.c_total_act_energy;
-    last.c_total_act_ret = emdata.c_total_act_ret_energy;
-    Shelly.call( "KVS.Set", { key:"last", value:last } );
+    last.total_act     = emdata.total_act;
+    last.total_act_ret = emdata.total_act_ret;
+    Shelly.call( "KVS.Set", { key:"last", value:JSON.stringify(last) } );
 }
 
 // get NVRAM data
@@ -46,7 +37,7 @@ Shelly.call( "KVS.Get", { key:"last" },
     {
         if( result !== null )
         {
-            last = result.value;
+            last = JSON.parse(result.value);
             print("last",JSON.stringify(last));
         }
     },
@@ -56,7 +47,7 @@ Shelly.call( "KVS.Get", { key:"purchase" },
     {
         if( result !== null )
         {
-            purchase = result.value;
+            purchase = JSON.parse(result.value);
             print("purchase",purchase);
         }
     },
@@ -66,7 +57,7 @@ Shelly.call( "KVS.Get", { key:"feed" },
     {
         if( result !== null )
         {
-            feed = result.value;
+            feed = JSON.parse(result.value);
             print("feed",feed);
         }
     },
@@ -99,11 +90,24 @@ Shelly.addStatusHandler(
     {
         if( status.name === 'emdata')
         {
-            print("status",JSON.stringify(status.delta));
+            //print( "status",JSON.stringify( status.delta ) );
             calculate( status.delta );
         }
     },
     null
 );
 
-print("Started");
+// Timer
+/*
+Timer.set( 2.5*1000, true,
+    function(ud)
+    {
+        let emdata = Shelly.getComponentStatus( "emdata", 0 ); 
+        //print( JSON.stringify( emdata ) );
+        calculate( emdata );
+    },
+    null
+);
+*/
+
+print( "Started" );
