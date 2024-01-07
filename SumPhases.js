@@ -35,7 +35,7 @@ function calculate(emdata)
 Shelly.call( "KVS.Get", { key:"last" }, 
     function(result)
     {
-        if( result !== null )
+        if( result !== undefined )
         {
             last = JSON.parse(result.value);
             print("last",JSON.stringify(last));
@@ -45,7 +45,7 @@ Shelly.call( "KVS.Get", { key:"last" },
 Shelly.call( "KVS.Get", { key:"purchase" }, 
     function(result)
     {
-        if( result !== null )
+        if( result !== undefined )
         {
             purchase = JSON.parse(result.value);
             print("purchase",purchase);
@@ -55,7 +55,7 @@ Shelly.call( "KVS.Get", { key:"purchase" },
 Shelly.call( "KVS.Get", { key:"feed" }, 
     function(result)
     {
-        if( result !== null )
+        if( result !== undefined )
         {
             feed = JSON.parse(result.value);
             print("feed",feed);
