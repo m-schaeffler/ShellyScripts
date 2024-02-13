@@ -18,6 +18,8 @@ function getByteSize(type) {
 let BTH = [];
 BTH[0x00] = { n: "pid", t: uint8 };
 BTH[0x01] = { n: "battery", t: uint8 };
+BTH[0x02] = { n: "temperature", t: int16, f: 0.01 };
+BTH[0x03] = { n: "humidity", t: int16, f: 0.01 };
 BTH[0x05] = { n: "lux", t: uint24, f: 0.01 };
 //BTH[0x1a] = { n: "Door", t: uint8 };
 //BTH[0x20] = { n: "Moisture", t: uint8 };
