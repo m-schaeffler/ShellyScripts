@@ -25,8 +25,10 @@ BTH[0x05] = { n: "lux", t: uint24, f: 0.01 };
 //BTH[0x20] = { n: "Moisture", t: uint8 };
 BTH[0x21] = { n: "motion", t: uint8 };
 BTH[0x2d] = { n: "state", t: uint8 };
+BTH[0x2e] = { n: "humidity", t: uint8 }; 
 BTH[0x3a] = { n: "button", t: uint8 };
 BTH[0x3f] = { n: "tilt", t: int16, f: 0.1 };
+BTH[0x45] = { n: "temperature", t: int16, f: 0.1 }; 
 let buttonEvent = ["-","S","SS","SSS","L"];
 let BTHomeDecoder = {
   utoi: function (num, bitsz) {
@@ -114,7 +116,7 @@ BLE.Scanner.Start( {duration_ms: BLE.Scanner.INFINITE_SCAN},
             let BTHparsed = shellyBLUParser( result );
             if( BTHparsed !== null )
             {
-                print( JSON.stringify( BTHparsed ) );
+                //print( JSON.stringify( BTHparsed ) );
                 if( last_packet_id !== BTHparsed.pid || last_addr !== BTHparsed.addr )
                 {
                     last_packet_id = BTHparsed.pid;
