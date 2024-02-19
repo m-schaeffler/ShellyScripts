@@ -5,4 +5,4 @@ cp ../../.node-red/projects/node_red/shellies2/Kellertreppe_Licht_ShellyBlu.js S
 cp ../../.node-red/projects/node_red/shellies2/Heizung_Stromzaehler_SumPhases.js SumPhases.js
 cp ../../.node-red/projects/node_red/shellies2/Verteilung_KeepAlive.js KeepAlive.js
 cp ../../.node-red/projects/node_red/shellies2/Heizung_Stromzaehler_GetTemp.js Stromzaehler_GetTemp.js
-cp ../../.node-red/projects/node_red/shellies2/shellyplusrgbw-1_dualLed.js dualLed.js
+cp ../../.node-red/projects/node_red/shellies2/Wohnzimmer_TV_Licht_DualLed.js DualLed.js

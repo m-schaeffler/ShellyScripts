@@ -14,7 +14,8 @@ function showState(id)
     //print(JSON.stringify(warm))
     let brightness = warm.brightness + cold.brightness;
     let temp       = temp_warm + Math.round( (temp_cold-temp_warm)/(warm.brightness+cold.brightness)*cold.brightness );
-    MQTT.publish( mqttPrefix+"/status/white:"+chr(0x30+id), "{\"output\":"+warm.output+",\"brightness\":"+brightness+",\"temp\":"+temp+"}", 1, false );
+    MQTT.publish( mqttPrefix+"/status/white:"+chr(0x30+id),
+                  "{\"output\":"+warm.output+",\"brightness\":"+brightness+",\"temp\":"+temp+",\"temperature\":{\"tC\":"+warm.temperature.tC+"}}", 1, false );
 }
 
 function showStates()
@@ -70,11 +71,17 @@ function mqttCallback(topic,message,id)
             print( "temp "+id+" "+data.temp );
             temp[id] = data.temp;
         }
-        if( data.transsition !== undefined )
+        if( data.transition !== undefined )
         {
-            print( "transsition "+id+" "+data.transsition );
-            payload_w.transsition = data.transsition;
-            payload_c.transsition = data.transsition;
+            print( "transition "+id+" "+data.transition );
+            payload_w.transition_duration= data.transition;
+            payload_c.transition_duration= data.transition;
+        }
+        if( data.transition_duration !== undefined )
+        {
+            print( "transition_duration "+id+" "+data.transition_duration );
+            payload_w.transition_duration= data.transition_duration;
+            payload_c.transition_duration= data.transition_duration;
         }
         if( brightness[id] !== null && temp[id] !== null )
         {
@@ -90,6 +97,14 @@ function mqttCallback(topic,message,id)
         } );
     }
 }
+
+Timer.set( 120*1000, true,
+    function(ud)
+    {
+        showStates();
+    },
+    null
+);
 
 // Main
 showStates();
