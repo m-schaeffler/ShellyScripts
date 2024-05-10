@@ -1,7 +1,7 @@
 // Konstanten
 let temp_warm = 2700;
 let temp_cold = 6500;
- 
+
 // globale Variablen
 let temp       = [null,null];
 let brightness = [null,null];
