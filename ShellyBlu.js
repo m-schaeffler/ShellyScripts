@@ -9,10 +9,13 @@ let uint16 = 2;
 let int16  = 3;
 let uint24 = 4;
 let int24  = 5;
+let uint32 = 6;
+let int32  = 7;
 function getByteSize(type) {
-  if (type === uint8 || type === int8) return 1;
+  if (type === uint8  || type === int8)  return 1;
   if (type === uint16 || type === int16) return 2;
   if (type === uint24 || type === int24) return 3;
+  if (type === uint32 || type === int32) return 4;
   return null;
 }
 let BTH = [];
@@ -29,6 +32,8 @@ BTH[0x2e] = { n: "humidity", t: uint8 };
 BTH[0x3a] = { n: "button", t: uint8 };
 BTH[0x3f] = { n: "tilt", t: int16, f: 0.1 };
 BTH[0x45] = { n: "temperature", t: int16, f: 0.1 };
+BTH[0xF0] = { n: "typeId", t: uint16 };
+BTH[0xF1] = { n: "version", t: uint32 };
 let buttonEvent = ["-","S","SS","SSS","L"];
 let BTHomeDecoder = {
   utoi: function (num, bitsz) {
@@ -55,23 +60,30 @@ let BTHomeDecoder = {
   getInt24LE: function (buffer) {
     return this.utoi(this.getUInt24LE(buffer), 24);
   },
+  getUInt32LE: function (buffer) {
+    return 0xffffffff & ((buffer.at(3) << 24) | (buffer.at(2) << 16) | (buffer.at(1) << 8) | buffer.at(0));
+  },
+  getInt32LE: function (buffer) {
+    return this.utoi(this.getUInt32LE(buffer), 32);
+  },
   getBufValue: function (type, buffer) {
     if (buffer.length < getByteSize(type)) return null;
-    let res = null;
-    if (type === uint8)  res = this.getUInt8(buffer);
-    if (type === int8)   res = this.getInt8(buffer);
-    if (type === uint16) res = this.getUInt16LE(buffer);
-    if (type === int16)  res = this.getInt16LE(buffer);
-    if (type === uint24) res = this.getUInt24LE(buffer);
-    if (type === int24)  res = this.getInt24LE(buffer);
-    return res;
+    if (type === uint8)  return this.getUInt8(buffer);
+    if (type === int8)   return this.getInt8(buffer);
+    if (type === uint16) return this.getUInt16LE(buffer);
+    if (type === int16)  return this.getInt16LE(buffer);
+    if (type === uint24) return this.getUInt24LE(buffer);
+    if (type === int24)  return this.getInt24LE(buffer);
+    if (type === uint32) return this.getUInt32LE(buffer);
+    if (type === int32)  return this.getInt32LE(buffer);
+    return null;
   },
   unpack: function (buffer) {
     // beacons might not provide BTH service data
     if (typeof buffer !== "string" || buffer.length === 0) return null;
     let result = {};
     let _dib = buffer.at(0);
-    result["encryption"] = _dib & 0x1 ? true : false;
+    result["encryption"] = Boolean( _dib & 0x1 );
     result["BTHome_version"] = _dib >> 5;
     if (result["BTHome_version"] !== 2) return null;
     //Can not handle encrypted data
@@ -80,15 +92,21 @@ let BTHomeDecoder = {
 
     let _bth;
     let _value;
-    while (buffer.length > 0) {
+    while (buffer.length > 0)
+    {
       _bth = BTH[buffer.at(0)];
-      if (typeof _bth === "undefined") {
+      if (typeof _bth === "undefined")
+      {
         console.log("BTH: unknown type",buffer.at(0));
         break;
       }
       buffer = buffer.slice(1);
       _value = this.getBufValue(_bth.t, buffer);
-      if (_value === null) break;
+      if (_value === null) 
+      {
+        console.log("Value === null")
+        break;
+      }
       if (typeof _bth.f !== "undefined") _value = _value * _bth.f;
       result[_bth.n] = _value;
       buffer = buffer.slice(getByteSize(_bth.t));
