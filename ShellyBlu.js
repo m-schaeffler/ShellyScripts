@@ -27,14 +27,15 @@ BTH[0x05] = { n: "lux", t: uint24, f: 0.01 };
 //BTH[0x1a] = { n: "Door", t: uint8 };
 //BTH[0x20] = { n: "Moisture", t: uint8 };
 BTH[0x21] = { n: "motion", t: uint8 };
-BTH[0x2d] = { n: "state", t: uint8 };
+BTH[0x2d] = { n: "state", t: uint8, e: ["close","open"] };
 BTH[0x2e] = { n: "humidity", t: uint8 };
-BTH[0x3a] = { n: "button", t: uint8 };
+BTH[0x3a] = { n: "button", t: uint8, e: ["-","S","SS","SSS","L"] };
+BTH[0x3a].e[0xfe] = "p";
 BTH[0x3f] = { n: "tilt", t: int16, f: 0.1 };
 BTH[0x45] = { n: "temperature", t: int16, f: 0.1 };
-BTH[0xF0] = { n: "typeId", t: uint16 };
-BTH[0xF1] = { n: "version", t: uint32 };
-let buttonEvent = ["-","S","SS","SSS","L"];
+BTH[0xf0] = { n: "typeId", t: uint16 };
+BTH[0xf1] = { n: "version", t: uint32 };
+
 let BTHomeDecoder = {
   utoi: function (num, bitsz) {
     let mask = 1 << (bitsz - 1);
@@ -94,6 +95,7 @@ let BTHomeDecoder = {
     let _value;
     while (buffer.length > 0)
     {
+      //print(buffer.at(0)+" "+buffer.at(1))
       _bth = BTH[buffer.at(0)];
       if (typeof _bth === "undefined")
       {
@@ -107,8 +109,30 @@ let BTHomeDecoder = {
         console.log("Value === null")
         break;
       }
-      if (typeof _bth.f !== "undefined") _value = _value * _bth.f;
-      result[_bth.n] = _value;
+      if( _bth.f !== undefined )
+      {
+        _value = _value * _bth.f;
+      }
+      else if( _bth.e !== undefined )
+      {
+        //print(_value+" -> "+_bth.e[_value])
+        _value = _bth.e[_value];
+      }
+      if( result[_bth.n] === undefined )
+      {      
+        result[_bth.n] = _value;
+      }
+      else
+      {
+        if( Array.isArray( result[_bth.n] ) )
+        {
+          result[_bth.n].push(_value);
+        } 
+        else
+        {
+          result[_bth.n] = [ result[_bth.n], _value ];
+        }
+      }
       buffer = buffer.slice(getByteSize(_bth.t));
     }
     return result;
@@ -134,19 +158,11 @@ BLE.Scanner.Start( {duration_ms: BLE.Scanner.INFINITE_SCAN},
             let BTHparsed = shellyBLUParser( result );
             if( BTHparsed !== null )
             {
-                //print( JSON.stringify( BTHparsed ) );
+                print( JSON.stringify( BTHparsed ) );
                 if( last_packet_id !== BTHparsed.pid || last_addr !== BTHparsed.addr )
                 {
                     last_packet_id = BTHparsed.pid;
                     last_addr      = BTHparsed.addr;
-                    if( BTHparsed.button !== undefined )
-                    {
-                        BTHparsed.button = buttonEvent[BTHparsed.button];
-                    }
-                    if( BTHparsed.state !== undefined )
-                    {
-                        BTHparsed.state = BTHparsed.state ? "open" : "close";
-                    }
                     MQTT.publish( mqttPrefix+"/ble", JSON.stringify( BTHparsed ), 1, false );
                 }
             }
