@@ -51,35 +51,35 @@ function mqttCallback(topic,message,id)
         let payload_c = { id:id*2+1};
         if( data.on !== undefined )
         {
-            print( "switch "+id+" "+data.on );
+            //print( "switch "+id+" "+data.on );
             payload_w.on = setTurn( id, data.on );
             payload_c.on = payload_w.on;
         }
         else if( data.turn !== undefined )
         {
-            print( "switch "+id+" "+data.turn );
+            //print( "switch "+id+" "+data.turn );
             payload_w.on = setTurn( id, data.turn );
             payload_c.on = payload_w.on;
         }
         if( data.brightness !== undefined )
         {
-            print( "brightness "+id+" "+data.brightness );
+            //print( "brightness "+id+" "+data.brightness );
             brightness[id] = data.brightness;
         }
         if( data.temp !== undefined )
         {
-            print( "temp "+id+" "+data.temp );
+            //print( "temp "+id+" "+data.temp );
             temp[id] = data.temp;
         }
         if( data.transition !== undefined )
         {
-            print( "transition "+id+" "+data.transition );
+            //print( "transition "+id+" "+data.transition );
             payload_w.transition_duration= data.transition;
             payload_c.transition_duration= data.transition;
         }
         if( data.transition_duration !== undefined )
         {
-            print( "transition_duration "+id+" "+data.transition_duration );
+            //print( "transition_duration "+id+" "+data.transition_duration );
             payload_w.transition_duration= data.transition_duration;
             payload_c.transition_duration= data.transition_duration;
         }
@@ -88,8 +88,8 @@ function mqttCallback(topic,message,id)
             payload_w.brightness = Math.round( brightness[id]*(temp_cold-temp[id]) / (temp_cold-temp_warm) );
             payload_c.brightness = brightness[id] - payload_w.brightness;
         }
-        print(JSON.stringify(payload_w));
-        print(JSON.stringify(payload_c));
+        //print(JSON.stringify(payload_w));
+        //print(JSON.stringify(payload_c));
         Shelly.call( "Light.Set", payload_w );
         Shelly.call( "Light.Set", payload_c, function(result,error_code,error_message,userdata)
         {
