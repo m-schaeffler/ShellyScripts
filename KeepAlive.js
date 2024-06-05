@@ -1,31 +1,14 @@
-let mqttPrefix = Shelly.getComponentConfig( "mqtt" ).topic_prefix;
-let index      = 0;
-let component  = "switch";
+const mqttPrefix = Shelly.getComponentConfig( "mqtt" ).topic_prefix;
 
-Timer.set( 90*1000, true,
+Timer.set( 240*1000, true,
     function(ud)
     {
-        let result = Shelly.getComponentStatus( component, index );
-        let topic  = mqttPrefix+"/status/"+component+":"+JSON.stringify(index);
-        if( component === "switch" )
-        {
-            delete result.source;
-            delete result.temperature.tF;
-            component = "input";
-        }
-        else
-        {
-            component = "switch";
-            if( index < 2 )
-            {
-                index++;
-            }
-            else
-            {
-                index = 0;
-            }
-        }
-        MQTT.publish( topic, JSON.stringify( result ), 0, false );
+        let result = Shelly.getComponentStatus( "switch", 0 );
+        delete result.source;
+        delete result.freq;
+        delete result.pf;
+        delete result.temperature.tF;
+        MQTT.publish( mqttPrefix+"/status/state:0", JSON.stringify(result), 0, false );
     },
     null
 );
