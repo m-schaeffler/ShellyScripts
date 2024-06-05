@@ -1,16 +1,16 @@
-let mqttPrefix = Shelly.getComponentConfig( "mqtt" ).topic_prefix;
-let BTHOME_SVC_ID_STR = "fcd2";
+const mqttPrefix = Shelly.getComponentConfig( "mqtt" ).topic_prefix;
+const BTHOME_SVC_ID_STR = "fcd2";
 let last_packet_id;
 let last_addr;
 
-let uint8  = 0;
-let int8   = 1;
-let uint16 = 2;
-let int16  = 3;
-let uint24 = 4;
-let int24  = 5;
-let uint32 = 6;
-let int32  = 7;
+const uint8  = 0;
+const int8   = 1;
+const uint16 = 2;
+const int16  = 3;
+const uint24 = 4;
+const int24  = 5;
+const uint32 = 6;
+const int32  = 7;
 function getByteSize(type) {
   if (type === uint8  || type === int8)  return 1;
   if (type === uint16 || type === int16) return 2;

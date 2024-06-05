@@ -1,6 +1,6 @@
 // Konstanten
-let maxCyclic = 60 * 4;
-let maxState = {
+const maxCyclic = 60 * 4;
+const maxState = {
     "-": 0,
     "S": 90*4,
     "D": 5*60*4,
@@ -14,7 +14,7 @@ let switchoffTimer = [null,null,null,null];
 let state          = ["-","-","-","-"];
 let cntState       = [0,0,0,0];
 let cntCyclic      = 0;
-let mqttPrefix     = Shelly.getComponentConfig( "mqtt" ).topic_prefix;
+const mqttPrefix   = Shelly.getComponentConfig( "mqtt" ).topic_prefix;
 
 function showState(id)
 {
@@ -35,17 +35,18 @@ function checkState(id)
         cntState[id] = cntState[id] - 1;
         if( cntState[id] <= 0 )
         {
-            if( state[id] === "S" || state[id] === "D" || state[id] === "L" )
+            switch( state[id] )
             {
-                switchWarn1( id );
-            }
-            else if( state[id] === "w" )
-            {
-                switchWarn2( id );
-            }
-            else
-            {
-                switchOff( id );
+                case "S":
+                case "D":
+                case "L":
+                    switchWarn1( id );
+                    break;
+                case "w":
+                    switchWarn2( id );
+                    break;
+                default:
+                    switchOff( id );
             }
         }
     }
@@ -126,17 +127,11 @@ Shelly.addEventHandler(
         if( event.name === 'input')
         {
             //print( "Input event", event.id );
-            if( event.info.event === "single_push" )
+            switch( event.info.event )
             {
-                shortPress( event.id );
-            }
-            else if( event.info.event === "double_push" )
-            {
-                doublePress( event.id );
-            }
-            else if( event.info.event === "long_push" )
-            {
-                longPress( event.id );
+                case "single_push": shortPress( event.id );  break;
+                case "double_push": doublePress( event.id ); break;
+                case "long_push" :  longPress( event.id );   break;
             }
         }
     },
@@ -146,17 +141,11 @@ Shelly.addEventHandler(
 function mqttCallback(topic,message,id)
 {
     //print( topic, message );
-    if( message === "S" )
+    switch( message )
     {
-        shortPress( id );
-    }
-    else if( message === "D" )
-    {
-        doublePress( id );
-    }
-    else if( message === "L" )
-    {
-        longPress( id );
+        case "S": shortPress( id );  break;
+        case "D": doublePress( id ); break;
+        case "L": longPress( id );   break;
     }
 }
 
