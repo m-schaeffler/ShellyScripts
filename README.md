@@ -2,6 +2,8 @@
 
 This package provides example scripts for Shelly gen2.
 
+## Scripts
+
 ### DualLed
 
 Control of 2 warm / cold white LED strips with PlusRGBW.
