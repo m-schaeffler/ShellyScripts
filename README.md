@@ -1,6 +1,4 @@
-# node-red-nspanel
-
-## Shelly Scripts
+# Shelly Scripts
 
 This package provides example scripts for Shelly gen2.
 
