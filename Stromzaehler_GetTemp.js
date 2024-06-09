@@ -1,4 +1,4 @@
-let mqttPrefix = Shelly.getComponentConfig( "mqtt" ).topic_prefix;
+const mqttPrefix = Shelly.getComponentConfig( "mqtt" ).topic_prefix;
 
 Timer.set( 120*1000, true,
     function(ud)

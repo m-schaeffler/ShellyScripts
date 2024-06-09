@@ -1,7 +1,7 @@
-let mqttPrefix = Shelly.getComponentConfig( "mqtt" ).topic_prefix;
-let last       = {total_act:0,total_act_ret:0};
-let purchase   = 0;
-let feed       = 0;
+const mqttPrefix = Shelly.getComponentConfig( "mqtt" ).topic_prefix;
+let last     = {total_act:0,total_act_ret:0};
+let purchase = 0;
+let feed     = 0;
 
 function send()
 {
