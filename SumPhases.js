@@ -1,31 +1,29 @@
 const mqttPrefix = Shelly.getComponentConfig( "mqtt" ).topic_prefix;
+const number200  = Virtual.getHandle( "number:200" );
+const number201  = Virtual.getHandle( "number:201" );
 let last     = {total_act:0,total_act_ret:0};
-let purchase = 0;
-let feed     = 0;
-
-function send()
-{
-    MQTT.publish( mqttPrefix+"/status/emeter:0", JSON.stringify( {purchase:purchase,feed:feed} ), 1, false );
-}
+let purchase = number201.getValue();
+let feed     = number200.getValue();
 
 function calculate(emdata)
 {
     //print("calc");
-    let delta = ( emdata.total_act - last.total_act ) - ( emdata.total_act_ret - last.total_act_ret );
+    const delta = ( emdata.total_act - last.total_act ) - ( emdata.total_act_ret - last.total_act_ret );
     print("delta",delta);
     if( delta > 0 )
     {
         purchase += delta;
         print("purchase",purchase)
+        number201.setValue( purchase );
         Shelly.call( "KVS.Set", { key:"purchase", value:purchase } );
     }
-    else if( delta < 0)
+    else if( delta < 0 )
     {
         feed -= delta;
         print("feed",feed)
+        number200.setValue( feed );
         Shelly.call( "KVS.Set", { key:"feed", value:feed } );
     }
-    send();
     last.total_act     = emdata.total_act;
     last.total_act_ret = emdata.total_act_ret;
     Shelly.call( "KVS.Set", { key:"last", value:JSON.stringify(last) } );
@@ -49,6 +47,7 @@ Shelly.call( "KVS.Get", { key:"purchase" },
         {
             purchase = JSON.parse(result.value);
             print("purchase",purchase);
+            number201.setValue( purchase );
         }
     },
     null );
@@ -59,11 +58,13 @@ Shelly.call( "KVS.Get", { key:"feed" },
         {
             feed = JSON.parse(result.value);
             print("feed",feed);
+            number200.setValue( feed );
         }
     },
     null );
 
 // MQTT
+/*
 function mqttSet(topic,message,ud)
 {
     if( message != "" )
@@ -83,6 +84,7 @@ function mqttSet(topic,message,ud)
     }
 }
 MQTT.subscribe( mqttPrefix+"/emeter:0/set", mqttSet, 0 );
+*/
 
 // Handler
 Shelly.addStatusHandler(
@@ -98,16 +100,13 @@ Shelly.addStatusHandler(
 );
 
 // Timer
-/*
-Timer.set( 2.5*1000, true,
+Timer.set( 600*1000, true,
     function(ud)
     {
-        let emdata = Shelly.getComponentStatus( "emdata", 0 ); 
-        //print( JSON.stringify( emdata ) );
-        calculate( emdata );
+        MQTT.publish( mqttPrefix+"/status/number:200", JSON.stringify( {value:feed} ), 1, false );
+        MQTT.publish( mqttPrefix+"/status/number:201", JSON.stringify( {value:purchase} ), 1, false );
     },
     null
 );
-*/
 
 print( "Started" );
