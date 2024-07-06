@@ -158,7 +158,7 @@ BLE.Scanner.Start( {duration_ms: BLE.Scanner.INFINITE_SCAN},
             let BTHparsed = shellyBLUParser( result );
             if( BTHparsed !== null )
             {
-                print( JSON.stringify( BTHparsed ) );
+                //print( JSON.stringify( BTHparsed ) );
                 if( last_packet_id !== BTHparsed.pid || last_addr !== BTHparsed.addr )
                 {
                     last_packet_id = BTHparsed.pid;

@@ -10,163 +10,191 @@ const maxState = {
 };
 
 // globale Variablen
-let switchoffTimer = [null,null,null,null];
-let state          = ["-","-","-","-"];
-let cntState       = [0,0,0,0];
-let cntCyclic      = 0;
 const mqttPrefix   = Shelly.getComponentConfig( "mqtt" ).topic_prefix;
+const enum200      = Virtual.getHandle( "enum:200" );
+let state          = enum200.getValue();
+let switchoffTimer = null;
+let cntState       = 0;
+let cntCyclic      = 0;
 
-function showState(id)
+function showState()
 {
-    MQTT.publish( mqttPrefix+"/status/state:"+chr(0x30+id), "{\"status\":\""+state[id]+"\"}", 1, false );
+    MQTT.publish( mqttPrefix+"/status/enum:200", "{\"value\":\""+enum200.getValue()+"\"}", 1, false );
 }
 
-function setState(id,aState)
+function setState(aState)
 {
-    state[id]    = aState;
-    cntState[id] = maxState[aState];
-    showState( id );
+    state    = aState;
+    cntState = maxState[aState];
+    print( "new state", state, "counter", cntState );
 }
 
-function checkState(id)
+function checkState()
 {
-    if( state[id] !== "-" )
+    if( state !== "-" )
     {
-        cntState[id] = cntState[id] - 1;
-        if( cntState[id] <= 0 )
+        if( --cntState <= 0 )
         {
-            switch( state[id] )
+            if( state === "S" || state === "D" || state === "L" )
             {
-                case "S":
-                case "D":
-                case "L":
-                    switchWarn1( id );
-                    break;
-                case "w":
-                    switchWarn2( id );
-                    break;
-                default:
-                    switchOff( id );
+                switchWarn1();
+            }
+            else if( state === "w" )
+            {
+                switchWarn2();
+            }
+            else
+            {
+                switchOff();
             }
         }
     }
 }
 
-function showStates()
+function switchOff()
 {
-    showState( 0 );
-    //showState( 1 );
-    //showState( 2 );
-    //showState( 3 );
+    print( "Output switched off" );
+    Shelly.call( "Switch.Set", { id:0, on:false }, null, null );
+    setState( "-" );
+    enum200.setValue( "-" );
 }
 
-function switchOff(id)
+function switchOn(aState)
 {
-    //print( "Output", id, "switched off" );
-    Shelly.call( "Switch.Set", { id:id, on:false }, null, null );
-    setState( id, "-" );
+    print( "Output switched on ", aState );
+    Shelly.call( "Switch.Set", { id:0, on:true }, null, null );
+    setState( aState );
 }
 
-function switchOn(id,aState)
+function switchWarn1()
 {
-    //print( "Output", id, "switched on ", aState );
-    Shelly.call( "Switch.Set", { id:id, on:true }, null, null );
-    setState( id, aState );
+    print( "Output switched warn 1" );
+    Shelly.call( "Switch.Set", { id:0, on:false }, null, null );
+    setState( "w" );
 }
 
-function switchWarn1(id)
+function switchWarn2()
 {
-    //print( "Output", id, "switched warn 1" );
-    Shelly.call( "Switch.Set", { id:id, on:false }, null, null );
-    setState( id, "w" );
+    print( "Output switched warn 2" );
+    Shelly.call( "Switch.Set", { id:0, on:true }, null, null );
+    setState( "W" );
 }
 
-function switchWarn2(id)
+function longpress()
 {
-    //print( "Output", id, "switched warn 2" );
-    Shelly.call( "Switch.Set", { id:id, on:true }, null, null );
-    setState( id, "W" );
-}
-
-function shortPress(id)
-{
-    //print( "short press" );
-    if( state[id] !== "L" )
+    if( state !== "L" )
     {
-        switchOn( id, "S" );
-    }
-}
-
-function doublePress(id)
-{
-    //print( "double press" );
-    if( state[id] !== "L" )
-    {
-        switchOn( id, "D" );
-    }
-}
-
-function longPress(id)
-{
-    //print( "long press" );
-    if( state[id] !== "L" )
-    {
-        switchOn( id, "L" );
+        switchOn( "L" );
     }
     else
     {
-        switchOff( id );
+        switchOff();
     }
 }
+
+// Events
+/*
+enum200.on( "change",
+    function(event)
+    {
+        //print( event.value );
+        if( event.value === "S" )
+        {
+            switchOn( "S" );
+        }
+        else if( event.value === "D" )
+        {
+            switchOn( "D" );
+        }
+        else if( event.value === "L" )
+        {
+            switchOn( "L" );
+        }
+        else if( event.value === "-" )
+        {
+            switchOff();
+        }
+    }
+);
+*/
+
+MQTT.subscribe( mqttPrefix+"/rpc", 
+    function(topic,message,ud)
+    {
+        message = JSON.parse( message );
+        if( message.method === "Enum.Set" )
+        {
+            //print("Enum.set",message.params.value);
+            if( message.params.value === "S" && state !== "L" )
+            {
+                switchOn( "S" );
+            }
+            else if( message.params.value === "D" && state !== "L" )
+            {
+                switchOn( "D" );
+            }
+            else if( message.params.value === "L" )
+            {
+                longpress();
+            }
+            else if( message.params.value === "-" )
+            {
+                switchOff();
+            }
+        }
+    }
+    , null
+);
 
 // Handler
 Shelly.addEventHandler(
     function(event,ud)
     {
         //print( JSON.stringify(event) );
-        if( event.name === 'input')
+        if( event.name === 'input' && event.id === 0 )
         {
-            //print( "Input event", event.id );
-            switch( event.info.event )
+            //print( "Input event", event.info.event );
+            if( event.info.event === "single_push" && state !== "L" )
             {
-                case "single_push": shortPress( event.id );  break;
-                case "double_push": doublePress( event.id ); break;
-                case "long_push" :  longPress( event.id );   break;
+                switchOn( "S" );
+                enum200.setValue( "S" );
+            }
+            else if( event.info.event === "double_push" && state !== "L" )
+            {
+                switchOn( "D" );
+                enum200.setValue( "D" );
+            }
+            else if( event.info.event === "long_push" )
+            {
+                longpress();
+                enum200.setValue( "L" );
             }
         }
     },
     null
 );
 
-function mqttCallback(topic,message,id)
-{
-    //print( topic, message );
-    switch( message )
-    {
-        case "S": shortPress( id );  break;
-        case "D": doublePress( id ); break;
-        case "L": longPress( id );   break;
-    }
-}
-
-// Main
-showStates();
-MQTT.subscribe( mqttPrefix+"/state:0", mqttCallback, 0 );
-//MQTT.subscribe( mqttPrefix+"/state:1", mqttCallback, 1 );
-//MQTT.subscribe( mqttPrefix+"/state:2", mqttCallback, 2 );
-//MQTT.subscribe( mqttPrefix+"/state:3", mqttCallback, 3 );
+// Cyclic
 Timer.set( 250, true,
     function(ud)
     {
         if( ++cntCyclic >= maxCyclic )
         {
             cntCyclic = 0;
-            showStates();
+            showState();
         }
-        checkState( 0 );
-        //checkState( 1 );
-        //checkState( 2 );
-        //checkState( 3 );
+        checkState();
     },
     null
 );
+
+// Main
+if( state !== "-" )
+{
+    switchOff();
+    enum200.setValue( "-" );
+}
+else
+{
+    showState();
+}
