@@ -122,9 +122,9 @@ MQTT.subscribe( mqttPrefix+"/rpc",
     function(topic,message,ud)
     {
         message = JSON.parse( message );
-        if( message.method === "Enum.Set" )
+        if( message.method === "Enum.Set" && message.params.id == 200 )
         {
-            //print("Enum.set",message.params.value);
+            print("Enum.set",message.params.value);
             if( message.params.value === "S" && state !== "L" )
             {
                 switchOn( "S" );
