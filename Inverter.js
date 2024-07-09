@@ -1,6 +1,7 @@
 const mqttPrefix = Shelly.getComponentConfig( "mqtt" ).topic_prefix;
 
-let counter = 0;
+let counter  = 0;
+let cntCycle = 0;
 let inverterSoll;
 let inverterleistung;
 let reportedState;
@@ -11,7 +12,7 @@ function showState(state)
     {
         reportedState = state;
         print( "showState:", state );
-        MQTT.publish( mqttPrefix+"/status/state:1", "{\"status\":\""+state+"\"}", 1, false );
+        MQTT.publish( mqttPrefix+"/status/enum:200", "{\"value\":\""+state+"\"}", 1, false );
     }
 }
 
@@ -42,9 +43,8 @@ function controlInverter()
     counter++;
     if( inverter !== ausgang )
     {
-        switch( inverterSoll )
+        if( inverterSoll === "on" )
         {
-            case "on":
                 //print( "inverteronline", inverteronline );
                 if( inverteronline )
                 {
@@ -54,8 +54,9 @@ function controlInverter()
                 {
                     print( "waiting for InverterOnline", counter );
                 }
-                break;
-            case "off":
+        }
+        else if ( inverterSoll === "off" )
+        {
                 if( inverterleistung === 0 || counter >= 30 )
                 {
                     switchInverter( false )
@@ -64,11 +65,11 @@ function controlInverter()
                 {
                     print( "waiting for inverterLeistung==0", counter );
                 }
-                break;
-            case "only":
+        }
+        else if ( inverterSoll === "only" )
+        {
                 counter = 0;
                 showState( inverterSoll );
-                break;
         }
     }
     else if( !inverter && inverterSoll==="on" )
@@ -116,37 +117,62 @@ function setInverter(inverter)
     //controlInverter();
 }
 
-function mqttCallback(topic,message,id)
+function rpcCallback(topic,message,ud)
 {
-    //print( topic, message );
-    switch( message )
+    //print(topic,message)
+    try
     {
-        case "on":
-        case "off":
-        case "only":
-            setInverter( message );
-            break;
-        default:
-            print("invalid message")
+        message = JSON.parse( message );
+        if( message.method === "Enum.Set" && message.params.id == 200 )
+        {
+            let answer = {
+                id:     message.id,
+                src:    mqttPrefix,
+                dst:    message.src,
+                result: {}
+            };
+            //print("set",message.params.value);
+            setInverter( message.params.value );
+            MQTT.publish( message.src+"/rpc", JSON.stringify( answer ), 1, false );
+        }
+    }
+    catch (error)
+    {
+        print( error );
     }
 }
 
 function cyclic(ud)
 {
+    if( ++cntCycle > 120 )
+    {
+        cntCycle      = 0;
+        reportedState = undefined;
+    }
     controlInverter();
 }
 
 function inverterCallback(topic,message,id)
 {
-    message = JSON.parse( message );
-    print( "Inverterleistung", message );
-    inverterleistung = message;
+    try
+    {
+        message = JSON.parse( message );
+        if( typeof message == "number" )
+        {
+            print( "Inverterleistung", message );
+            inverterleistung = message;
+        }
+    }
+    catch (error)
+    {
+        print( error );
+    }
 }
 
 // main
 showState( "init" );
-MQTT.subscribe( mqttPrefix+"/state:1", mqttCallback, null );
+MQTT.subscribe( mqttPrefix+"/rpc", rpcCallback, null );
 MQTT.subscribe( "shellies/PV_Speicher_Inverterleistung/relay/0/power", inverterCallback, null );
 Timer.set( 1000, true, cyclic, null );
 
-print( "started", mqttPrefix );
+print( "started" );
