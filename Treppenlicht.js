@@ -121,26 +121,33 @@ enum200.on( "change",
 MQTT.subscribe( mqttPrefix+"/rpc", 
     function(topic,message,ud)
     {
-        message = JSON.parse( message );
-        if( message.method === "Enum.Set" && message.params.id == 200 )
+        try
         {
-            print("Enum.set",message.params.value);
-            if( message.params.value === "S" && state !== "L" )
+            message = JSON.parse( message );
+            if( message.method === "Enum.Set" && message.params.id == 200 )
             {
-                switchOn( "S" );
+                //print("Enum.set",message.params.value);
+                if( message.params.value === "S" && state !== "L" )
+                {
+                    switchOn( "S" );
+                }
+                else if( message.params.value === "D" && state !== "L" )
+                {
+                    switchOn( "D" );
+                }
+                else if( message.params.value === "L" )
+                {
+                    longpress();
+                }
+                else if( message.params.value === "-" )
+                {
+                    switchOff();
+                }
             }
-            else if( message.params.value === "D" && state !== "L" )
-            {
-                switchOn( "D" );
-            }
-            else if( message.params.value === "L" )
-            {
-                longpress();
-            }
-            else if( message.params.value === "-" )
-            {
-                switchOff();
-            }
+        }
+        catch (error)
+        {
+            print( error );
         }
     }
     , null
