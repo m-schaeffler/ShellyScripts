@@ -1,114 +1,164 @@
 // Konstanten
-let temp_warm = 2700;
-let temp_cold = 6500;
+const temp_warm = 2700;
+const temp_cold = 6500;
+const brightMin = [6,8];
+const brightMax = [40,70];
 
 // globale Variablen
-let temp       = [null,null];
-let brightness = [null,null];
-let mqttPrefix = Shelly.getComponentConfig( "mqtt" ).topic_prefix;
+const mqttPrefix = Shelly.getComponentConfig( "mqtt" ).topic_prefix;
+let   output     = false;
+let   temp       = [4500,4500];
+let   brightness = [100,100];
 
-function showState(id)
+function showOutput()
 {
-    let warm = Shelly.getComponentStatus( "light", id*2 );
-    let cold = Shelly.getComponentStatus( "light", id*2+1 );
-    //print(JSON.stringify(warm))
-    let brightness = warm.brightness + cold.brightness;
-    let temp       = temp_warm + Math.round( (temp_cold-temp_warm)/(warm.brightness+cold.brightness)*cold.brightness );
-    MQTT.publish( mqttPrefix+"/status/white:"+chr(0x30+id),
-                  "{\"output\":"+warm.output+",\"brightness\":"+brightness+",\"temp\":"+temp+",\"temperature\":{\"tC\":"+warm.temperature.tC+"}}", 1, false );
+    MQTT.publish( mqttPrefix+"/status/boolean:200", "{\"value\":"+output+"}", 1, false );
 }
 
-function showStates()
+function setLights()
 {
-    showState( 0 );
-    showState( 1 );
+    try
+    {
+	  const warm0 = brightness[0]*(temp_cold-temp[0]) / (temp_cold-temp_warm);
+	  const cold0 = brightness[0] - warm0;
+	  const warm1 = brightness[1]*(temp_cold-temp[1]) / (temp_cold-temp_warm);
+	  const cold1 = brightness[1] - warm1;
+	  //print(warm0,cold0,warm1,cold1)
+	  Shelly.call( "Light.Set", { id:0, on:output, brightness:Math.round(warm0) }, function(result,error_code,error_message,userdata)
+	  {
+        try
+        {
+	      Shelly.call( "Light.Set", { id:1, on:output, brightness:Math.round(cold0) }, function(result,error_code,error_message,userdata)
+	      {
+            try
+            {
+		      Shelly.call( "Light.Set", { id:2, on:output, brightness:Math.round(warm1) }, function(result,error_code,error_message,userdata)
+		      {
+		        try
+		        {
+		          Shelly.call( "Light.Set", { id:3, on:output, brightness:Math.round(cold1) }, function(result,error_code,error_message,userdata)
+		          {
+		            try
+		            {
+		              showOutput();
+                    }
+                    catch( error )
+                    {
+                      print( error );
+                    }
+		          } )
+                }
+                catch( error )
+                {
+                  print( error );
+                }
+		      } )
+            }
+            catch( error )
+            {
+              print( error );
+            }
+	      } )
+	    }
+        catch( error )
+        {
+          print( error );
+        }
+	  } );
+    }
+    catch( error )
+    {
+      print( error );
+    }
 }
 
-function setTurn(id,value)
+function setOutput(value)
 {
+    //print("setOutput",value);
     if( value === "toggle" )
     {
-        return ! Shelly.getComponentStatus( "light", id*2 ).output;
+        output = ! output;
     }
-    else if( value === true || value === "on" || value === 1 )
+    else if( value === true || value === "on" || value == 1 )
     {
-        return true;
+        output = true;
     }
-    else if( value === false || value === "off" || value === 0 )
+    else if( value === false || value === "off" || value == 0 )
     {
-        return false;
+        output = false;
     }
-    return undefined;
+    setLights();
 }
 
-function mqttCallback(topic,message,id)
+function setBrightness(id,value)
 {
-    if( message !== "" )
+    brightness[id] = brightMin[id] + value * (brightMax[id]-brightMin[id]) / 100;
+    //print("setBrightness",id,brightness[id]);
+}
+
+function setTemp(id,value)
+{
+    //print("setTemp",id,value);
+    temp[id] = value;
+}
+
+function rpcCallback(topic,message,ud)
+{
+    try
     {
-        print( topic, message );
-        let data      = JSON.parse( message );
-        let payload_w = { id:id*2 };
-        let payload_c = { id:id*2+1};
-        if( data.on !== undefined )
+        message = JSON.parse( message );
+        if( message.method === "Boolean.Set" && message.params.id == 200 )
         {
-            //print( "switch "+id+" "+data.on );
-            payload_w.on = setTurn( id, data.on );
-            payload_c.on = payload_w.on;
+            setOutput( message.params.value );
         }
-        else if( data.turn !== undefined )
-        {
-            //print( "switch "+id+" "+data.turn );
-            payload_w.on = setTurn( id, data.turn );
-            payload_c.on = payload_w.on;
-        }
-        if( data.brightness !== undefined )
-        {
-            //print( "brightness "+id+" "+data.brightness );
-            brightness[id] = data.brightness;
-        }
-        if( data.temp !== undefined )
-        {
-            //print( "temp "+id+" "+data.temp );
-            temp[id] = data.temp;
-        }
-        if( data.transition !== undefined )
-        {
-            //print( "transition "+id+" "+data.transition );
-            payload_w.transition_duration= data.transition;
-            payload_c.transition_duration= data.transition;
-        }
-        if( data.transition_duration !== undefined )
-        {
-            //print( "transition_duration "+id+" "+data.transition_duration );
-            payload_w.transition_duration= data.transition_duration;
-            payload_c.transition_duration= data.transition_duration;
-        }
-        if( brightness[id] !== null && temp[id] !== null )
-        {
-            payload_w.brightness = Math.round( brightness[id]*(temp_cold-temp[id]) / (temp_cold-temp_warm) );
-            payload_c.brightness = brightness[id] - payload_w.brightness;
-        }
-        //print(JSON.stringify(payload_w));
-        //print(JSON.stringify(payload_c));
-        Shelly.call( "Light.Set", payload_w );
-        Shelly.call( "Light.Set", payload_c, function(result,error_code,error_message,userdata)
-        {
-            showState( id );
-        } );
+        const answer = {
+            id:     message.id,
+            src:    mqttPrefix,
+            dst:    message.src,
+            result: {}
+        };
+        MQTT.publish( message.src+"/rpc", JSON.stringify( answer ), 1, false );
+    }
+    catch( error )
+    {
+        print( error );
     }
 }
 
-Timer.set( 120*1000, true,
+function mqttCallback(topic,message,ud)
+{
+    try
+    {
+        message = JSON.parse( message );
+        if( message.brightness !== undefined )
+        {
+            setBrightness( 0, message.brightness );
+            setBrightness( 1, message.brightness );
+        }
+        if( message.temp !== undefined )
+        {
+            setTemp( 0, message.temp );
+            setTemp( 1, message.temp );
+        }
+        setLights();
+    }
+    catch( error )
+    {
+        print( error );
+    }
+}
+
+Timer.set( 60*1000, true,
     function(ud)
     {
-        showStates();
+        showOutput();
     },
     null
 );
 
 // Main
-showStates();
-MQTT.subscribe( mqttPrefix+"/white:0", mqttCallback, 0 );
-MQTT.subscribe( mqttPrefix+"/white:1", mqttCallback, 1 );
+showOutput();
+MQTT.subscribe( mqttPrefix+"/rpc", rpcCallback, null );
+MQTT.subscribe( "Shelly2/Data/TunableWhite", mqttCallback, null );
 
 print( "started" );
