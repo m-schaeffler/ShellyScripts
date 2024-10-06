@@ -45,31 +45,40 @@ function controlInverter()
     {
         if( inverterSoll === "on" )
         {
-                //print( "inverteronline", inverteronline );
-                if( inverteronline )
+            //print( "inverteronline", inverteronline );
+            if( inverteronline )
+            {
+                switchAusgang( true );
+            }
+            else
+            {
+                if( ( counter % 30 ) === 0 )
                 {
-                    switchAusgang( true );
+                    print( "!!! PANIK: no voltage generated !!!" );
+                    switchInverter( false );
+                    showState( "Panik2" );
                 }
                 else
                 {
                     print( "waiting for InverterOnline", counter );
                 }
+            }
         }
         else if ( inverterSoll === "off" )
         {
-                if( inverterleistung === 0 || counter >= 30 )
-                {
-                    switchInverter( false )
-                }
-                else
-                {
-                    print( "waiting for inverterLeistung==0", counter );
-                }
+            if( inverterleistung === 0 || counter >= 30 )
+            {
+                switchInverter( false )
+            }
+            else
+            {
+                print( "waiting for inverterLeistung==0", counter );
+            }
         }
         else if ( inverterSoll === "only" )
         {
-                counter = 0;
-                showState( inverterSoll );
+            counter = 0;
+            showState( inverterSoll );
         }
     }
     else if( !inverter && inverterSoll==="on" )
@@ -94,7 +103,7 @@ function controlInverter()
         if( inverterSoll==="on" && !inverteronline )
         {
             print( "!!! Panik: inverterSoll==='on' && !inverteronline !!!" );
-            showState( "Panik" );
+            showState( "Panik1" );
         }
         else
         {
