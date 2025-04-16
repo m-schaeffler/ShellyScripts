@@ -204,6 +204,25 @@ let BTHomeDecoder = {
   },
 };
 
+function sendRawData(res)
+{
+    const rawdata = res.service_data[BTHOME_SVC_ID_STR];
+    if( typeof rawdata == "string" && rawdata !== "" )
+    {
+        let help = {
+            addr: res.addr,
+            rssi: res.rssi,
+            time: Math.floor( Date.now() ),
+            data: []
+        };
+        for( const c of rawdata )
+        {
+            help.data.push( c.charCodeAt() );
+        }
+        MQTT.publish( mqttPrefix+"/bleraw", JSON.stringify( help ), 1, false );
+    }
+}
+
 function shellyBLUParser(res)
 {
     let result  = BTHomeDecoder.unpack( res.service_data[BTHOME_SVC_ID_STR] );
@@ -228,13 +247,14 @@ BLE.Scanner.Start( {duration_ms: BLE.Scanner.INFINITE_SCAN},
                 {
                     last_packet_id = BTHparsed.pid;
                     last_addr      = BTHparsed.addr;
-                    MQTT.publish( mqttPrefix+"/ble", JSON.stringify( BTHparsed ), 1, false );
+                    //MQTT.publish( mqttPrefix+"/ble", JSON.stringify( BTHparsed ), 1, false );
                     if( BTHparsed.addr === "0c:ef:f6:f2:2f:c6" )
                     {
                         setDoor( BTHparsed.state );
                     }
                 }
             }
+            sendRawData( result );
         }
     } );
 
