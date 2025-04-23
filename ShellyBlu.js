@@ -1,4 +1,5 @@
 const mqttPrefix = Shelly.getComponentConfig( "mqtt" ).topic_prefix;
+const gateway = mqttPrefix.split("/")[1];
 const BTHOME_SVC_ID_STR = "fcd2";
 
 function sendRawData(res)
@@ -10,6 +11,7 @@ function sendRawData(res)
             addr: res.addr,
             rssi: res.rssi,
             time: Math.floor( Date.now() ),
+            gateway: gateway,
             data: []
         };
         for( const c of rawdata )
