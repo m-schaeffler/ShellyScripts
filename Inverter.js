@@ -102,7 +102,7 @@ function controlInverter()
         counter = 0;
         if( inverterSoll==="on" && !inverteronline )
         {
-            print( "!!! Panik: inverterSoll==='on' && !inverteronline !!!" );
+            print( "!!! Panik: inverterSoll===on && !inverteronline !!!" );
             showState( "Panik1" );
         }
         else

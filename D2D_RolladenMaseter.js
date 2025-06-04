@@ -221,7 +221,7 @@ function sendRawData(res)
         {
             help.data.push( c.charCodeAt() );
         }
-        MQTT.publish( mqttPrefix+"/bleraw", JSON.stringify( help ), 1, false );
+        MQTT.publish( "node-red/bleraw", JSON.stringify( help ), 1, false );
     }
 }
 
