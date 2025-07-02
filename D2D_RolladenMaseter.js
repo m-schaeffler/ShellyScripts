@@ -250,7 +250,7 @@ BLE.Scanner.Start( {duration_ms: BLE.Scanner.INFINITE_SCAN},
                     last_packet_id = BTHparsed.pid;
                     last_addr      = BTHparsed.addr;
                     //MQTT.publish( mqttPrefix+"/ble", JSON.stringify( BTHparsed ), 1, false );
-                    if( BTHparsed.addr === "0c:ef:f6:f2:2f:c6" )
+                    if( BTHparsed.addr === "0c:ef:f6:f2:2f:c6" && BTHparsed.state !== undefined )
                     {
                         setDoor( BTHparsed.state );
                     }
