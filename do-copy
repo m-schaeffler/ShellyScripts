@@ -6,6 +6,7 @@ cp ../../.node-red/projects/node_red/shellies2/Heizung_Stromzähler_SumPhases.js
 cp ../../.node-red/projects/node_red/shellies2/Werkstatt_Licht_Keep-Alive.js KeepAlive.js
 cp ../../.node-red/projects/node_red/shellies2/Heizung_Stromzähler_GetTemp.js Stromzaehler_GetTemp.js
 cp ../../.node-red/projects/node_red/shellies2/Heizung_Stromzähler_Voltages.js Stromzaehler_Voltages.js
+cp ../../.node-red/projects/node_red/shellies2/Wohnzimmer_Licht_Tropfen_LightSwitch.js SwitchSinglePress.js
 cp ../../.node-red/projects/node_red/shellies2/Wohnzimmer_TV_Licht_DualLed.js DualLed.js
 cp ../../.node-red/projects/node_red/shellies2/PV_Speicher_Inverter.js Inverter.js
 
