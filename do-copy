@@ -10,4 +10,4 @@ cp ../../.node-red/projects/node_red/shellies2/Wohnzimmer_Licht_Tropfen_LightSwi
 cp ../../.node-red/projects/node_red/shellies2/Wohnzimmer_TV_Licht_DualLed.js DualLed.js
 cp ../../.node-red/projects/node_red/shellies2/PV_Speicher_Inverter.js Inverter.js
 
-cp ../../.node-red/projects/node_red/shellies2/Eichenau_Roll_Ter_Mst_Master.js D2D_RolladenMaseter.js
+cp ../../.node-red/projects/node_red/shellies2/Eichenau_Roll_Ter_Mst_Master.js D2D_RolladenMaster.js
